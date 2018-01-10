@@ -261,7 +261,9 @@ public class DeviceAdminSample extends PreferenceActivity implements LocationLis
                         if (location != null) {
 
                             latitude = location.getLatitude();
+
                             longitude = location.getLongitude();
+                            System.out.println("latilati:"+latitude+"::"+longitude);
                         }
                     }
 
