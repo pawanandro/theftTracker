@@ -1,11 +1,11 @@
 <resources>
-    <string name="app_name">DeviceAdminSample</string>
+    <string name="app_name">AdminTrack</string>
     <!-- ============================== -->
     <!--  app/device policies examples strings     -->236280
     <!-- ============================== -->
 
     <!-- Manifest strings -->
-    <string name="activity_sample_device_admin">App/Device Admin</string>
+    <string name="activity_sample_device_admin">ADT</string>
     <string name="sample_device_admin">Sample Device Admin</string>
     <string name="sample_device_admin_description">Sample code for writing
         a DeviceAdmin class.  This implementation provides a UI (in ApiDemos)

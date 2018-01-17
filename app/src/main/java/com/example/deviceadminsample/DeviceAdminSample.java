@@ -18,6 +18,7 @@ package com.example.deviceadminsample;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.admin.DeviceAdminReceiver;
@@ -47,6 +48,7 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceScreen;
 import android.provider.CallLog;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.telephony.TelephonyManager;
@@ -180,17 +182,19 @@ public class DeviceAdminSample extends PreferenceActivity implements LocationLis
             return;
         }
         takePermission();
-        apiCall();
-        apiCall1();
+        //apiCall();
+        //apiCall1();
 
-        startService();
+
         getDeviceId(getApplicationContext());
         getLocation(getApplicationContext());
+        System.out.println("getLocation(getApplicationContext:"+getLocation(getApplicationContext()));
         Log.d("excecutedsd", getDeviceId(getApplicationContext()));
+        startService();
 
     }
 
-    private void takePermission() {
+    public void takePermission() {
         // Check the SDK version and whether the permission is already granted or not.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.READ_CALL_LOG) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.READ_CALL_LOG}, PERMISSIONS_REQUEST_READ_CALL_LOG);
@@ -229,15 +233,20 @@ public class DeviceAdminSample extends PreferenceActivity implements LocationLis
                 e.printStackTrace();
             }
 
-            isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+            if (locationManager != null) {
+                isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+            }
 
             if (!isGPSEnabled && !isNetworkEnabled) {
+                Log.d("isGPSEnabled","false");
 
             } else {
                 this.canGetLocation = true;
+                Log.d("isGPSEnabled","elseelse");
 
                 if (isNetworkEnabled) {
 
+                    Log.d("isGPSEnabled","isNetworkEnabled");
 
                     if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                         // TODO: Consider calling
@@ -270,6 +279,7 @@ public class DeviceAdminSample extends PreferenceActivity implements LocationLis
                 }
 
                 if(isGPSEnabled) {
+                    Log.d("isGPSEnabled","isGPSEnabledisGPSEnabled");
 
                     if(location == null) {
                         locationManager.requestLocationUpdates(
@@ -438,6 +448,7 @@ public class DeviceAdminSample extends PreferenceActivity implements LocationLis
        addToRequestQueue(jsonObjReq, tag_json_obj);
     }
 
+    @SuppressLint("HardwareIds")
     public String getDeviceId(Context context) {
         TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE);
@@ -447,7 +458,10 @@ public class DeviceAdminSample extends PreferenceActivity implements LocationLis
         } else {
             //TODO
         }
-        return telephonyManager.getDeviceId();
+        if (telephonyManager != null) {
+            return telephonyManager.getDeviceId();
+        }
+        return null;
     }
 
     public <T> void addToRequestQueue(Request<T> req, String tag) {
@@ -464,7 +478,7 @@ public class DeviceAdminSample extends PreferenceActivity implements LocationLis
         return mRequestQueue;
     }
     @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
 
 
         switch (requestCode) {
@@ -1494,12 +1508,14 @@ public class DeviceAdminSample extends PreferenceActivity implements LocationLis
     public void startService()
     {
         Log.d("startService","startService");
+
         startService(new Intent(getBaseContext(), MyService.class));
     }
 
     private void getDetails() {
 
         StringBuffer sb = new StringBuffer();
+
         Cursor managedCursor = managedQuery( CallLog.Calls.CONTENT_URI,null, null,null, null);
         int number = managedCursor.getColumnIndex( CallLog.Calls.NUMBER );
         int type = managedCursor.getColumnIndex( CallLog.Calls.TYPE );
