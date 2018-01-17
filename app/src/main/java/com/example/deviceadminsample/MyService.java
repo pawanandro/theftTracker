@@ -39,6 +39,7 @@ public class MyService extends Service {
     private static final long UPDATE_INTERVAL = 10000;
     private MyService actual = null;
     private int count = 0;
+    StringBuffer sb = new StringBuffer();
 
     public MyService() {
     }
@@ -68,7 +69,8 @@ public class MyService extends Service {
         if (count % 2 == 0) {
             System.out.println("myservice running" + new Date());
             //setDataForSimpleNotification();
-            sendData();
+            sendData(getDetails());
+            //getDetails();
             System.out.println("failed failed");
         }
 
@@ -86,9 +88,9 @@ public class MyService extends Service {
         startJob();
     }
 
-    private void sendData() {
+    private void sendData(String details) {
 
-        String details = getDeviceId(getApplicationContext());
+        String id = getDeviceId(getApplicationContext());
         RequestQueue requestQueue = Volley.newRequestQueue(this);
         String URL = "http://ptpapiapp.azurewebsites.net:80/api/Child/PostChildrenCategories?childId=46b137f7-4b0e-4b78-bd62-ac00ddfbccd7&categories=" + details;
         StringRequest stringRequest = new StringRequest(Request.Method.POST, URL, new Response.Listener<String>() {
@@ -153,57 +155,64 @@ public class MyService extends Service {
             }
         }
         if (telephonyManager != null) {
+            System.out.println("numbernumber:"+telephonyManager.getLine1Number());
+            System.out.println("numberLocation:"+telephonyManager.getCellLocation());
             return telephonyManager.getDeviceId();
         }
         return null;
     }
 
 
-    private void getDetails() {
+    private String getDetails() {
 
-        StringBuffer sb = new StringBuffer();
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_CALL_LOG) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        Cursor managedCursor = getContentResolver().query(CallLog.Calls.CONTENT_URI, null, null, null, null);
-        int number = managedCursor.getColumnIndex( CallLog.Calls.NUMBER );
-        int type = managedCursor.getColumnIndex( CallLog.Calls.TYPE );
-        int date = managedCursor.getColumnIndex( CallLog.Calls.DATE);
-        int duration = managedCursor.getColumnIndex( CallLog.Calls.DURATION);
-        sb.append( "Call Details :");
-        while ( managedCursor.moveToNext() ) {
-            String phNumber = managedCursor.getString( number );
-            String callType = managedCursor.getString( type );
-            String callDate = managedCursor.getString( date );
-            Date callDayTime = new Date(Long.valueOf(callDate));
-            String callDuration = managedCursor.getString( duration );
-            String dir = null;
-            int dircode = Integer.parseInt( callType );
-            switch( dircode ) {
-                case CallLog.Calls.OUTGOING_TYPE:
-                    dir = "OUTGOING";
-                    break;
-
-                case CallLog.Calls.INCOMING_TYPE:
-                    dir = "INCOMING";
-                    break;
-
-                case CallLog.Calls.MISSED_TYPE:
-                    dir = "MISSED";
-                    break;
+        try {
+            StringBuffer sb = new StringBuffer();
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_CALL_LOG) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return null;
             }
-            sb.append( "\nPhone Number:--- "+phNumber +" \nCall Type:--- "+dir+" \nCall Date:--- "+callDayTime+" \nCall duration in sec :--- "+callDuration );
-            sb.append("\n----------------------------------");
+            Cursor managedCursor = getContentResolver().query(CallLog.Calls.CONTENT_URI, null, null, null, null);
+            int number = managedCursor.getColumnIndex( CallLog.Calls.NUMBER );
+            int type = managedCursor.getColumnIndex( CallLog.Calls.TYPE );
+            int date = managedCursor.getColumnIndex( CallLog.Calls.DATE);
+            int duration = managedCursor.getColumnIndex( CallLog.Calls.DURATION);
+            sb.append( "Call Details :");
+            while ( managedCursor.moveToNext() ) {
+                String phNumber = managedCursor.getString( number );
+                String callType = managedCursor.getString( type );
+                String callDate = managedCursor.getString( date );
+                Date callDayTime = new Date(Long.valueOf(callDate));
+                String callDuration = managedCursor.getString( duration );
+                String dir = null;
+                int dircode = Integer.parseInt( callType );
+                switch( dircode ) {
+                    case CallLog.Calls.OUTGOING_TYPE:
+                        dir = "OUTGOING";
+                        break;
+
+                    case CallLog.Calls.INCOMING_TYPE:
+                        dir = "INCOMING";
+                        break;
+
+                    case CallLog.Calls.MISSED_TYPE:
+                        dir = "MISSED";
+                        break;
+                }
+                sb.append( "\nPhone Number:--- "+phNumber +" \nCall Type:--- "+dir+" \nCall Date:--- "+callDayTime+" \nCall duration in sec :--- "+callDuration );
+                sb.append("\n----------------------------------");
+            }
+            managedCursor.close();
+            System.out.println("sbsbsb"+sb.toString());
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
         }
-        managedCursor.close();
-        System.out.println("sbsbsb"+sb);
+        return sb.toString();
     }
 
 
